@@ -50,7 +50,7 @@ DECLARE @StartTime datetime
 DECLARE @EndTime datetime
 SELECT @StartTime=GETDATE()
 
-select * /**INTO cPivot**/
+select * INTO cPivot
 from 
 (
   select Patient, Question, Score
@@ -80,13 +80,13 @@ SELECT DATEDIFF(mS,@StartTime,@EndTime) AS [Duration in millisecs]
 LEFT OUTER JOIN METHOD:
 1. Create a table of unique entities.
 Select distinct [Entity column name] into [Unique Entities table] from [eav_Table]
-2. Select [unique entities].[entity column name], attribute_1, attribute_2, …attribute_N
+2. Select [unique entities].[entity column name], attribute_1, attribute_2, â€¦attribute_N
 From [unique entities] as U
 left join
 (select [entity], [Value] as Attrribute_1 from EAV_Table where Attribute=1) as M1 on U.Entity = M1.entity
 Left join
 (select [entity], [Value] as Attrribute_2 from EAV_Table where Attribute=2) as M2 on U.Entity = M2.entity
-….
+â€¦.
 (until attribute 10)
 ***/
 /*** LEFT OUTER JOIN METHOD: ***/
@@ -209,4 +209,89 @@ select max(Patient) from newTable  /* = 2000000 */
 
  insert into NewDataF select [Patient], [Question],[Score]
  from newTable where [Patient] < 200000
+ 
+ 
+ 
+ 
+ --Investigating query performance before and after Indexing
+ 
+/*** Execution time before Indexing  ***/
+DECLARE @StartTime datetime
+DECLARE @EndTime datetime
+SELECT @StartTime=GETDATE()
 
+SELECT * FROM EAV WHERE Patient=12 AND Score = 5;
+
+SELECT @EndTime=GETDATE()
+
+--This will return execution time of your query
+SELECT DATEDIFF(mS,@StartTime,@EndTime) AS [Duration in millisecs]
+
+--Time1 = 540 millisecs
+--Time2 = 417 millisecs
+--Time3 = 410 millisecs
+-- (4 row(s) affected)
+
+
+/*** Execution time after Indexing  ***/
+
+create unique clustered index ID_QN_INDEX on EAV (Question, Patient);
+
+DECLARE @StartTime datetime
+DECLARE @EndTime datetime
+SELECT @StartTime=GETDATE()
+
+SELECT * FROM EAV WHERE Patient=12 AND Score = 5;
+
+SELECT @EndTime=GETDATE()
+
+--This will return execution time of your query
+SELECT DATEDIFF(mS,@StartTime,@EndTime) AS [Duration in millisecs]
+
+--Time1 = 397 millisecs
+--Time2 = 367 millisecs
+--Time3 = 360 millisecs
+-- (4 row(s) affected)
+
+
+
+
+--Attribute Centered queries execution time comparison
+
+--A simple attribute-centered query was constructed to compare the execution time between an EAV and a relational table.
+
+1. Query issued on EAV
+
+DECLARE @StartTime datetime
+DECLARE @EndTime datetime
+SELECT @StartTime=GETDATE()
+
+SELECT * FROM EAV WHERE Question = 16 AND Score=3;
+
+SELECT @EndTime=GETDATE()
+
+--This will return execution time of your query
+SELECT DATEDIFF(mS,@StartTime,@EndTime) AS [Duration in millisecs]
+
+--Time1 = 41760 millisecs
+--Time2 = 7237 millisecs
+--Time3 = 4797 millisecs
+--(20034 row(s) affected)
+
+2. Query issued on a conventional table
+
+DECLARE @StartTime datetime
+DECLARE @EndTime datetime
+SELECT @StartTime=GETDATE()
+
+SELECT Patient, [Question 16 Score] FROM CONVENTIONAL_TABLE WHERE [Question 16 Score]=3;
+
+SELECT @EndTime=GETDATE()
+
+--This will return execution time of your query
+SELECT DATEDIFF(mS,@StartTime,@EndTime) AS [Duration in millisecs]
+
+-- Time1 = 4390 millisecs
+-- Time2 = 2513 millisecs
+-- Time3 = 1680 millisecs
+--(20034 row(s) affected)

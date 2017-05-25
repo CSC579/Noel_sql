@@ -260,7 +260,7 @@ SELECT DATEDIFF(mS,@StartTime,@EndTime) AS [Duration in millisecs]
 
 --A simple attribute-centered query was constructed to compare the execution time between an EAV and a relational table.
 
-1. Query issued on EAV
+/**  1. Query issued on EAV  **/
 
 DECLARE @StartTime datetime
 DECLARE @EndTime datetime
@@ -278,7 +278,7 @@ SELECT DATEDIFF(mS,@StartTime,@EndTime) AS [Duration in millisecs]
 --Time3 = 4797 millisecs
 --(20034 row(s) affected)
 
-2. Query issued on a conventional table
+/** 2. Query issued on a conventional table  **/
 
 DECLARE @StartTime datetime
 DECLARE @EndTime datetime
